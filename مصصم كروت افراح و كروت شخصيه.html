@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المصمم الذكي | تصميم كروت احترافية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Tajawal:wght@400;700&family=Reem+Kufi&family=Amiri:wght@400;700&family=Changa:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --primary: #3b82f6; --bg-app: #f8fafc; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-app); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .app-container { display: grid; grid-template-columns: 380px 1fr; gap: 30px; max-width: 1300px; width: 100%; }
+        .sidebar { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); height: fit-content; max-height: 90vh; overflow-y: auto; }
+        
+        .section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: bold; color: #444; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box; margin-bottom: 10px; }
+
+        /* قوالب المصمم */
+        .bg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .bg-opt { height: 35px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; background-size: cover; }
+        .bg-opt:hover { border-color: var(--primary); }
+
+        .preview-area { display: flex; flex-direction: column; align-items: center; position: sticky; top: 20px; }
+        
+        /* الكرت */
+        #card-canvas {
+            width: 550px; height: 320px; background: #fff; border-radius: 15px;
+            position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background-size: cover; background-position: center; overflow: hidden;
+        }
+
+        /* الشعار القابل للسحب */
+        #card-logo { 
+            position: absolute; top: 20px; right: 20px; 
+            width: 80px; height: auto; cursor: move; 
+            z-index: 10; display: none; user-select: none;
+        }
+
+        #card-content { text-align: center; z-index: 5; pointer-events: none; width: 100%; }
+        #display-name { font-size: 30px; font-weight: bold; margin-bottom: 5px; }
+        #display-sub { font-size: 16px; margin-bottom: 15px; opacity: 0.8; letter-spacing: 1px; }
+        #display-info { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+
+        .btn-group { margin-top: 25px; display: flex; gap: 10px; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; transition: 0.3s; }
+        .btn-save { background: #059669; color: white; }
+        .btn-reset { background: #64748b; color: white; }
+        
+        .hint { font-size: 11px; color: #ef4444; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<h1 style="color: #1e293b; margin-bottom: 30px;">🎨 استوديو تصميم الكروت الاحترافي</h1>
+
+<div class="app-container">
+    <div class="sidebar">
+        <div class="section">
+            <label>1. قوالب الخلفيات (خيار المصمم)</label>
+            <div class="bg-grid">
+                <div class="bg-opt" style="background: linear-gradient(135deg, #1e3c72, #2a5298);" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: linear-gradient(135deg, #000000, #434343);" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: linear-gradient(135deg, #fdfbfb, #ebedee);" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: linear-gradient(135deg, #d4fc79, #96e6a1);" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: linear-gradient(135deg, #6a11cb, #2575fc);" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: #ffffff; border: 1px solid #ddd;" onclick="setBg('#ffffff')"></div>
+                <div class="bg-opt" style="background: url('https://www.transparenttextures.com/patterns/white-diamond.png'), #f1f5f9;" onclick="setBg(this.style.background)"></div>
+                <div class="bg-opt" style="background: linear-gradient(135deg, #ff9a9e, #fad0c4);" onclick="setBg(this.style.background)"></div>
+            </div>
+            <label style="margin-top:10px;">أو ارفع خلفية خاصة</label>
+            <input type="file" accept="image/*" onchange="loadCustomBg(event)">
+        </div>
+
+        <div class="section">
+            <label>2. الشعار (Logo)</label>
+            <input type="file" accept="image/*" onchange="loadLogo(event)">
+            <p class="hint">* يمكنك سحب الشعار بالماوس لتحريكه داخل الكرت.</p>
+        </div>
+
+        <div class="section">
+            <label>3. البيانات</label>
+            <input type="text" id="inName" placeholder="الاسم الكامل" oninput="render()">
+            <input type="text" id="inSub" placeholder="الوظيفة أو التخصص" oninput="render()">
+            <textarea id="inInfo" rows="2" placeholder="بيانات التواصل (هاتف، إيميل...)" oninput="render()"></textarea>
+        </div>
+
+        <div class="section">
+            <label>4. الخط والألوان</label>
+            <select id="inFont" onchange="render()">
+                <option value="'Cairo'">Cairo (عصري)</option>
+                <option value="'Tajawal'">Tajawal (ناعم)</option>
+                <option value="'Amiri'">Amiri (كلاسيكي)</option>
+                <option value="'Changa'">Changa (هندسي)</option>
+            </select>
+            <label>لون النص</label>
+            <input type="color" id="inColor" value="#1e293b" oninput="render()">
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="card-canvas">
+            <img id="card-logo" src="" alt="logo" draggable="true">
+            <div id="card-content">
+                <div id="display-name">اسمك الكريم</div>
+                <div id="display-sub">المسمى الوظيفي</div>
+                <div id="display-info">بيانات التواصل والروابط</div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-save" onclick="save()">تحميل الكرت بجودة عالية (PNG)</button>
+            <button class="btn-reset" onclick="location.reload()">إعادة ضبط</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- تحديث المحتوى ---
+    function render() {
+        const name = document.getElementById('inName').value;
+        const sub = document.getElementById('inSub').value;
+        const info = document.getElementById('inInfo').value;
+        const font = document.getElementById('inFont').value;
+        const color = document.getElementById('inColor').value;
+
+        if(name) document.getElementById('display-name').innerText = name;
+        if(sub) document.getElementById('display-sub').innerText = sub;
+        if(info) document.getElementById('display-info').innerText = info;
+
+        const card = document.getElementById('card-canvas');
+        card.style.fontFamily = font;
+        card.style.color = color;
+    }
+
+    // --- التعامل مع الصور ---
+    function loadLogo(event) {
+        const logo = document.getElementById('card-logo');
+        const file = event.target.files[0];
+        if(file) {
+            logo.src = URL.createObjectURL(file);
+            logo.style.display = 'block';
+        }
+    }
+
+    function setBg(bg) {
+        const card = document.getElementById('card-canvas');
+        card.style.background = bg;
+        card.style.backgroundSize = 'cover';
+    }
+
+    function loadCustomBg(event) {
+        const card = document.getElementById('card-canvas');
+        const file = event.target.files[0];
+        if(file) {
+            card.style.background = `url(${URL.createObjectURL(file)})`;
+            card.style.backgroundSize = 'cover';
+        }
+    }
+
+    // --- وظيفة تحريك الشعار (Drag & Drop) ---
+    const logo = document.getElementById('card-logo');
+    let isDragging = false;
+    let offset = { x: 0, y: 0 };
+
+    logo.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offset.x = e.clientX - logo.offsetLeft;
+        offset.y = e.clientY - logo.offsetTop;
+        logo.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        let newX = e.clientX - offset.x;
+        let newY = e.clientY - offset.y;
+        
+        // منع الشعار من الخروج من حدود الكرت
+        const parent = document.getElementById('card-canvas');
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + logo.offsetWidth > parent.offsetWidth) newX = parent.offsetWidth - logo.offsetWidth;
+        if (newY + logo.offsetHeight > parent.offsetHeight) newY = parent.offsetHeight - logo.offsetHeight;
+
+        logo.style.left = newX + 'px';
+        logo.style.top = newY + 'px';
+        logo.style.right = 'auto'; // إلغاء الـ right الافتراضي
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        logo.style.cursor = 'move';
+    });
+
+    // --- حفظ التصميم ---
+    function save() {
+        const card = document.getElementById('card-canvas');
+        html2canvas(card, { scale: 3, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'My-Design.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+</script>
+
+</body>
+</html>
